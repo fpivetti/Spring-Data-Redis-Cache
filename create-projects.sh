@@ -11,8 +11,7 @@ delete_unwanted() {
 	find "$1" -depth -name ".mvn" -exec rm -rfv "{}" \;
 	find "$1" -depth -name "mvnw*" -exec rm -fv "{}" \;
 
-	# find "$1" -depth -name "*.gitignore" -exec rm -fv "{}" \;
-	# find "$1" -depth -name "*.md" -exec rm -fv "{}" \;
+	find "$1" -depth -name "*.md" -exec rm -fv "{}" \;
 }
 
 delete_tests() {
