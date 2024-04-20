@@ -15,6 +15,7 @@ delete_unwanted() {
 }
 
 delete_tests() {
+  # remove useless file from shared libraries
   find "$1" -depth -name "test" -exec rm -rfv "{}" \;
   find "$1" -depth -name "resources" -exec rm -rfv "{}" \;
 }
