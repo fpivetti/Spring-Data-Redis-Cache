@@ -5,19 +5,29 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+import com.fpivetti.microservices.core.product.persistence.ProductRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class ProductServiceApplicationTests {
+class ProductServiceApplicationTests extends MongoDbTestBase{
 	private static final int PRODUCT_ID_OK = 1;
 	private static final int PRODUCT_ID_NOT_FOUND = 13;
 	private static final int PRODUCT_ID_INVALID = -1;
 
 	@Autowired
 	private WebTestClient client;
+
+	@Autowired
+	private ProductRepository repository;
+
+	@BeforeEach
+	void setupDb() {
+		repository.deleteAll();
+	}
 
 	@Test
 	void getProductById() {
