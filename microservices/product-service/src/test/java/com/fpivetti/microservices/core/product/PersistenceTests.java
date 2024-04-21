@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 @DataMongoTest
 class PersistenceTests extends MongoDbTestBase{
+
     @Autowired
     private ProductRepository repository;
     private ProductEntity savedEntity;
