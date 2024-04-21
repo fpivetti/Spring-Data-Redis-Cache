@@ -18,9 +18,7 @@ public class ProductEntity {
 
     public ProductEntity() {}
 
-    public ProductEntity(String id, Integer version, int productId, String name, int weight) {
-        this.id = id;
-        this.version = version;
+    public ProductEntity(int productId, String name, int weight) {
         this.productId = productId;
         this.name = name;
         this.weight = weight;
