@@ -5,19 +5,29 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+import com.fpivetti.microservices.core.recommendation.persistence.RecommendationRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class RecommendationServiceApplicationTests {
+class RecommendationServiceApplicationTests extends MongoDbTestBase {
 	private static final int PRODUCT_ID_OK = 1;
 	private static final int PRODUCT_ID_NOT_FOUND = 113;
 	private static final int PRODUCT_ID_INVALID = -1;
 
 	@Autowired
 	private WebTestClient client;
+
+	@Autowired
+	private RecommendationRepository repository;
+
+	@BeforeEach
+	void setupDb() {
+		repository.deleteAll();
+	}
 
 	@Test
 	void getRecommendationsByProductId() {

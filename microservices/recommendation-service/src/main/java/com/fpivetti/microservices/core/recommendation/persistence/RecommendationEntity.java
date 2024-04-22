@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "recommendations")
-@CompoundIndex(name = "recommendations_unique_idx", unique = true, def = "{'productId': 1, 'recommendationId'; 1}")
+@CompoundIndex(name = "recommendations_unique_idx", unique = true, def = "{'productId': 1, 'recommendationId': 1}")
 public class RecommendationEntity {
     @Id
     private String id;
@@ -20,9 +20,7 @@ public class RecommendationEntity {
 
     public RecommendationEntity() {}
 
-    public RecommendationEntity(String id, Integer version, int productId, int recommendationId, String author, int rate, String content) {
-        this.id = id;
-        this.version = version;
+    public RecommendationEntity(int productId, int recommendationId, String author, int rate, String content) {
         this.productId = productId;
         this.recommendationId = recommendationId;
         this.author = author;
@@ -34,16 +32,8 @@ public class RecommendationEntity {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public Integer getVersion() {
         return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
     }
 
     public int getProductId() {
