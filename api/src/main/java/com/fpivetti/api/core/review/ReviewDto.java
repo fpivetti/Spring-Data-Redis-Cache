@@ -9,7 +9,7 @@ public class ReviewDto {
     private String serviceAddress;
 
     public ReviewDto() {
-        productId =0;
+        productId = 0;
         reviewId = 0;
         author = null;
         subject = null;

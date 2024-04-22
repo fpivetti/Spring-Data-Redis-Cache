@@ -7,7 +7,7 @@ public class ProductDto {
     private String serviceAddress;
 
     public ProductDto() {
-        productId =0;
+        productId = 0;
         name = null;
         weight = 0;
         serviceAddress = null;

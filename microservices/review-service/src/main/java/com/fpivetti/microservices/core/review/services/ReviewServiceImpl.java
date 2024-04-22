@@ -3,7 +3,6 @@ package com.fpivetti.microservices.core.review.services;
 import com.fpivetti.api.core.review.ReviewDto;
 import com.fpivetti.api.core.review.ReviewService;
 import com.fpivetti.api.exceptions.InvalidInputException;
-import com.fpivetti.api.exceptions.NotFoundException;
 import com.fpivetti.microservices.core.review.persistence.ReviewEntity;
 import com.fpivetti.microservices.core.review.persistence.ReviewRepository;
 import com.fpivetti.util.http.ServiceUtil;
@@ -35,9 +34,6 @@ public class ReviewServiceImpl implements ReviewService {
             throw new InvalidInputException("Invalid productId: " + productId);
         }
         List<ReviewEntity> entityList = repository.findByProductId(productId);
-        if(entityList.isEmpty()) {
-            throw new NotFoundException("No reviews found for productId: " + productId);
-        }
         List<ReviewDto> reviewDtoList = mapper.entityListToApiList(entityList);
         reviewDtoList.forEach(e -> e.setServiceAddress(serviceUtil.getServiceAddress()));
 
@@ -54,7 +50,7 @@ public class ReviewServiceImpl implements ReviewService {
             LOG.debug("createReview: created a review entity: {}/{}", body.getProductId(), body.getReviewId());
             return mapper.entityToApi(newEntity);
         } catch (DataIntegrityViolationException dive) {
-            throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Review Id:" + body.getReviewId());
+            throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Review Id: " + body.getReviewId());
         }
     }
 

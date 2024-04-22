@@ -9,7 +9,7 @@ public class RecommendationDto {
     private String serviceAddress;
 
     public RecommendationDto() {
-        productId =0;
+        productId = 0;
         recommendationId = 0;
         author = null;
         rate = 0;

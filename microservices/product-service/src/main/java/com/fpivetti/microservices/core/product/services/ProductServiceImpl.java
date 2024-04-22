@@ -7,7 +7,7 @@ import com.fpivetti.api.exceptions.NotFoundException;
 import com.fpivetti.microservices.core.product.persistence.ProductEntity;
 import com.fpivetti.microservices.core.product.persistence.ProductRepository;
 import com.fpivetti.util.http.ServiceUtil;
-import com.mongodb.DuplicateKeyException;
+import org.springframework.dao.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

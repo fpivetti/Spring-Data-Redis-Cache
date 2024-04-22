@@ -7,7 +7,7 @@ import com.fpivetti.api.exceptions.NotFoundException;
 import com.fpivetti.microservices.core.recommendation.persistence.RecommendationEntity;
 import com.fpivetti.microservices.core.recommendation.persistence.RecommendationRepository;
 import com.fpivetti.util.http.ServiceUtil;
-import com.mongodb.DuplicateKeyException;
+import org.springframework.dao.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +54,7 @@ public class RecommendationServiceImpl implements RecommendationService {
             LOG.debug("createRecommendation: created a recommendation entity: {}/{}", body.getProductId(), body.getRecommendationId());
             return mapper.entityToApi(newEntity);
         } catch (DuplicateKeyException dke) {
-            throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Recommendation Id:" + body.getRecommendationId());
+            throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Recommendation Id: " + body.getRecommendationId());
         }
     }
 
