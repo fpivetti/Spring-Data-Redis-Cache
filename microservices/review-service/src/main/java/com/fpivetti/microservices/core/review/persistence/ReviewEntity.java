@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @Table(name = "reviews", indexes = {@Index(name = "reviews_unique_idx", unique = true, columnList = "productId, reviewId")})
 public class ReviewEntity {
     @Id @GeneratedValue
-    private String id;
+    private int id;
     @Version
     private Integer version;
     private int productId;
@@ -17,9 +17,7 @@ public class ReviewEntity {
 
     public ReviewEntity() {}
 
-    public ReviewEntity(String id, Integer version, int productId, int reviewId, String author, String subject, String content) {
-        this.id = id;
-        this.version = version;
+    public ReviewEntity(int productId, int reviewId, String author, String subject, String content) {
         this.productId = productId;
         this.reviewId = reviewId;
         this.author = author;
@@ -27,12 +25,8 @@ public class ReviewEntity {
         this.content = content;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public Integer getVersion() {
