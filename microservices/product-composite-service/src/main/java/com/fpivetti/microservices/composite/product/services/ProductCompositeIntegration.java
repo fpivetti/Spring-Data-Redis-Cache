@@ -98,8 +98,9 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         try {
             String url = recommendationServiceUrl + productId;
             LOG.debug("Will call the getRecommendations API on URL: {}", url);
-            List<RecommendationDto> recommendations = restTemplate.exchange(url, HttpMethod.GET, null,
-                    new ParameterizedTypeReference<List<RecommendationDto>>(){}).getBody();
+            List<RecommendationDto> recommendations = restTemplate
+                    .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<RecommendationDto>>(){})
+                    .getBody();
 
             assert recommendations != null;
             LOG.debug("Found {} recommendations for a product with id: {}", recommendations.size(), productId);
@@ -142,8 +143,9 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         try {
             String url = reviewServiceUrl + productId;
             LOG.debug("Will call the getReviews API on URL: {}", url);
-            List<ReviewDto> reviews = restTemplate.exchange(url, HttpMethod.GET, null,
-                    new ParameterizedTypeReference<List<ReviewDto>>(){}).getBody();
+            List<ReviewDto> reviews = restTemplate
+                    .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<ReviewDto>>(){})
+                    .getBody();
 
             assert reviews != null;
             LOG.debug("Found {} reviews for a product with id: {}", reviews.size(), productId);

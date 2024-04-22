@@ -40,6 +40,44 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
         return createProductAggregate(product, recommendations, reviews, serviceUtil.getServiceAddress());
     }
 
+    @Override
+    public void createProduct(ProductAggregateDto body) {
+        try {
+            LOG.debug("createCompositeProduct: creates a new composite entity for productId: {}", body.getProductId());
+            ProductDto productDto = new ProductDto(body.getProductId(), body.getName(), body.getWeight(), null);
+            integration.createProduct(productDto);
+
+            if(body.getRecommendations() != null) {
+                body.getRecommendations().forEach(r -> {
+                    RecommendationDto recommendationDto = new RecommendationDto(body.getProductId(),
+                            r.getRecommendationId(), r.getAuthor(), r.getRate(), r.getContent(), null);
+                    integration.createRecommendation(recommendationDto);
+                });
+            }
+            if(body.getReviews() != null) {
+                body.getReviews().forEach(r -> {
+                    ReviewDto reviewDto = new ReviewDto(body.getProductId(), r.getReviewId(), r.getAuthor(),
+                            r.getSubject(), r.getContent(), null);
+                    integration.createReview(reviewDto);
+                });
+            }
+            LOG.debug("createCompositeProduct: composite entities created for productId: {}", body.getProductId());
+
+        } catch (RuntimeException re) {
+            LOG.warn("createCompositeProduct failed", re);
+            throw re;
+        }
+    }
+
+    @Override
+    public void deleteProduct(int productId) {
+        LOG.debug("deleteCompositeProduct: Deletes a product aggregate for productId: {}", productId);
+        integration.deleteProduct(productId);
+        integration.deleteRecommendations(productId);
+        integration.deleteReviews(productId);
+        LOG.debug("deleteCompositeProduct: aggregate entities deleted for productId: {}", productId);
+    }
+
     private ProductAggregateDto createProductAggregate(ProductDto product, List<RecommendationDto> recommendations, List<ReviewDto> reviews, String serviceAddress) {
         // 1. Setup product info
         int productId = product.getProductId();
