@@ -6,8 +6,8 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 
 import com.fpivetti.microservices.core.product.persistence.ProductEntity;
 import com.fpivetti.microservices.core.product.persistence.ProductRepository;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 @DataMongoTest
 class PersistenceTests extends MongoDbTestBase{
-
     @Autowired
     private ProductRepository repository;
     private ProductEntity savedEntity;
