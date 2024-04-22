@@ -1,10 +1,10 @@
 package com.fpivetti.api.core.product;
 
 public class ProductDto {
-    private final int productId;
-    private final String name;
-    private final int weight;
-    private final String serviceAddress;
+    private int productId;
+    private String name;
+    private int weight;
+    private String serviceAddress;
 
     public ProductDto() {
         productId =0;
@@ -24,15 +24,31 @@ public class ProductDto {
         return productId;
     }
 
+    public void setProductId(int productId) {
+        this.productId = productId;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getWeight() {
         return weight;
     }
 
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
     public String getServiceAddress() {
         return serviceAddress;
+    }
+
+    public void setServiceAddress(String serviceAddress) {
+        this.serviceAddress = serviceAddress;
     }
 }

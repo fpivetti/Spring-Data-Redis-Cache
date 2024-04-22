@@ -15,16 +15,16 @@ public class RecommendationEntity {
     private int productId;
     private int recommendationId;
     private String author;
-    private int rate;
+    private int rating;
     private String content;
 
     public RecommendationEntity() {}
 
-    public RecommendationEntity(int productId, int recommendationId, String author, int rate, String content) {
+    public RecommendationEntity(int productId, int recommendationId, String author, int rating, String content) {
         this.productId = productId;
         this.recommendationId = recommendationId;
         this.author = author;
-        this.rate = rate;
+        this.rating = rating;
         this.content = content;
     }
 
@@ -60,12 +60,12 @@ public class RecommendationEntity {
         this.author = author;
     }
 
-    public int getRate() {
-        return rate;
+    public int getRating() {
+        return rating;
     }
 
-    public void setRate(int rate) {
-        this.rate = rate;
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 
     public String getContent() {
