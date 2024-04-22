@@ -7,6 +7,9 @@ services:
           memory: 512M
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
   recommendation:
     build: microservices/recommendation-service
@@ -16,6 +19,9 @@ services:
           memory: 512M
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
   review:
     build: microservices/review-service
@@ -25,6 +31,9 @@ services:
           memory: 512M
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   product-composite:
     build: microservices/product-composite-service
@@ -36,3 +45,30 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+
+  mongodb:
+    image: mongo:latest
+    mem_limit: 512m
+    ports:
+      - "27017:27017"
+    command: mongod
+    healthcheck:
+      test: "mongostat -n 1"
+      interval: 5s
+      timeout: 2s
+      retries: 60
+
+  postgres:
+    image: postgres:latest
+    mem_limit: 512m
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pwd
+      - POSTGRES_DB=review-db
+    healthcheck:
+      test: "/usr/bin/pg_isready"
+      interval: 5s
+      timeout: 2s
+      retries: 60
