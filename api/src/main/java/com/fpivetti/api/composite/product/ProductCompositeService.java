@@ -38,14 +38,14 @@ public interface ProductCompositeService {
      * @param body A JSON representation of the new composite product
      */
     @Operation(
-            summary = "${api.product-composite.create-composite-product.description}",
-            description = "${api.product-composite.create-composite-product.notes}")
+            summary = "${api.product-composite.create-composite-product.summary}",
+            description = "${api.product-composite.create-composite-product.description}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "400", description = "${api.responseCodes.badRequest.description}"),
             @ApiResponse(responseCode = "422", description = "${api.responseCodes.unprocessableEntity.description}")
     })
     @PostMapping(
-            value    = "/product-composite",
+            value = "/product-composite",
             consumes = "application/json")
     void createProduct(@RequestBody ProductAggregateDto body);
 
@@ -55,8 +55,8 @@ public interface ProductCompositeService {
      * @param productId Id of the product
      */
     @Operation(
-            summary = "${api.product-composite.delete-composite-product.description}",
-            description = "${api.product-composite.delete-composite-product.notes}")
+            summary = "${api.product-composite.delete-composite-product.summary}",
+            description = "${api.product-composite.delete-composite-product.description}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "400", description = "${api.responseCodes.badRequest.description}"),
             @ApiResponse(responseCode = "422", description = "${api.responseCodes.unprocessableEntity.description}")

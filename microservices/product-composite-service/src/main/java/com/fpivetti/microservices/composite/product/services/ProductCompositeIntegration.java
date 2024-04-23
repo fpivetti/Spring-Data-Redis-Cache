@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class ProductCompositeIntegration implements ProductService, RecommendationService, ReviewService {
@@ -45,15 +46,15 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
                                        @Value("${app.review-service.port}") int reviewServicePort) {
         this.restTemplate = restTemplate;
         this.mapper = mapper;
-        productServiceUrl = "http://" + productServiceHost + ":" + productServicePort + "/product/";
-        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendation?productId=";
-        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review?productId=";
+        productServiceUrl = "http://" + productServiceHost + ":" + productServicePort + "/product";
+        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendation";
+        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review";
     }
 
     @Override
     public ProductDto getProduct(int productId) {
         try {
-            String url = productServiceUrl + productId;
+            String url = productServiceUrl + "/" + productId;
             LOG.debug("Will call the getProduct API on URL: {}", url);
             ProductDto productDto = restTemplate.getForObject(url, ProductDto.class);
 
@@ -96,7 +97,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public List<RecommendationDto> getRecommendations(int productId) {
         try {
-            String url = recommendationServiceUrl + productId;
+            String url = recommendationServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the getRecommendations API on URL: {}", url);
             List<RecommendationDto> recommendations = restTemplate
                     .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<RecommendationDto>>(){})
@@ -141,7 +142,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public List<ReviewDto> getReviews(int productId) {
         try {
-            String url = reviewServiceUrl + productId;
+            String url = reviewServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the getReviews API on URL: {}", url);
             List<ReviewDto> reviews = restTemplate
                     .exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<ReviewDto>>(){})
@@ -184,7 +185,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     private RuntimeException handleHttpClientException(HttpClientErrorException ex) {
-        switch (HttpStatus.resolve(ex.getStatusCode().value())) {
+        switch (Objects.requireNonNull(HttpStatus.resolve(ex.getStatusCode().value()))) {
             case NOT_FOUND:
                 return new NotFoundException(getErrorMessage(ex));
             case UNPROCESSABLE_ENTITY:

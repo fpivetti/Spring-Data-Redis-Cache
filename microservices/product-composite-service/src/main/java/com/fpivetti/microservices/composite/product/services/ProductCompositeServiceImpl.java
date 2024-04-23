@@ -29,21 +29,21 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     @Override
     public ProductAggregateDto getProduct(int productId) {
         LOG.debug("getCompositeProduct: lookup a product aggregate for productId: {}", productId);
-        ProductDto product = integration.getProduct(productId);
-        if (product == null) {
+        ProductDto productDto = integration.getProduct(productId);
+        if (productDto == null) {
             throw new NotFoundException("No product found for productId: " + productId);
         }
 
         List<RecommendationDto> recommendations = integration.getRecommendations(productId);
         List<ReviewDto> reviews = integration.getReviews(productId);
         LOG.debug("getCompositeProduct: aggregate entity found for productId: {}", productId);
-        return createProductAggregate(product, recommendations, reviews, serviceUtil.getServiceAddress());
+        return createProductAggregate(productDto, recommendations, reviews, serviceUtil.getServiceAddress());
     }
 
     @Override
     public void createProduct(ProductAggregateDto body) {
         try {
-            LOG.debug("createCompositeProduct: creates a new composite entity for productId: {}", body.getProductId());
+            LOG.debug("createCompositeProduct: create a new composite entity for productId: {}", body.getProductId());
             ProductDto productDto = new ProductDto(body.getProductId(), body.getName(), body.getWeight(), null);
             integration.createProduct(productDto);
 
@@ -78,11 +78,11 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
         LOG.debug("deleteCompositeProduct: aggregate entities deleted for productId: {}", productId);
     }
 
-    private ProductAggregateDto createProductAggregate(ProductDto product, List<RecommendationDto> recommendations, List<ReviewDto> reviews, String serviceAddress) {
+    private ProductAggregateDto createProductAggregate(ProductDto productDto, List<RecommendationDto> recommendations, List<ReviewDto> reviews, String serviceAddress) {
         // 1. Setup product info
-        int productId = product.getProductId();
-        String name = product.getName();
-        int weight = product.getWeight();
+        int productId = productDto.getProductId();
+        String name = productDto.getName();
+        int weight = productDto.getWeight();
 
         // 2. Copy summary recommendation info, if available
         List<RecommendationSummaryDto> recommendationSummaries = (recommendations == null) ? null : recommendations.stream()
@@ -95,7 +95,7 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
                         .collect(Collectors.toList());
 
         // 4. Create info regarding the involved microservices addresses
-        String productAddress = product.getServiceAddress();
+        String productAddress = productDto.getServiceAddress();
         String recommendationAddress = (recommendations != null && !recommendations.isEmpty()) ? recommendations.getFirst().getServiceAddress() : "";
         String reviewAddress = (reviews != null && !reviews.isEmpty()) ? reviews.getFirst().getServiceAddress() : "";
         ServiceAddressesDto serviceAddresses = new ServiceAddressesDto(serviceAddress, productAddress, recommendationAddress, reviewAddress);

@@ -9,6 +9,8 @@ spring.datasource:
   username: user
   password: pwd
 
+# spring.datasource.hikari.initializationFailTimeout: 60000
+
 logging:
   level:
     root: INFO
