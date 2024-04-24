@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -24,6 +22,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.cache.annotation.CacheKey;
+import javax.cache.annotation.CacheRemove;
+import javax.cache.annotation.CacheResult;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,8 +55,8 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    @Cacheable(cacheNames = "products", key = "#productId")
-    public ProductDto getProduct(int productId) {
+    @CacheResult(cacheName = "products")
+    public ProductDto getProduct(@CacheKey int productId) {
         try {
             String url = productServiceUrl + "/" + productId;
             LOG.debug("Will call the getProduct API on URL: {}", url);
@@ -86,8 +87,8 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", key = "#productId")
-    public void deleteProduct(int productId) {
+    @CacheRemove(cacheName = "products")
+    public void deleteProduct(@CacheKey int productId) {
         try {
             String url = productServiceUrl + "/" + productId;
             LOG.debug("Will call the deleteProduct API on URL: {}", url);
@@ -99,8 +100,8 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    @Cacheable(cacheNames = "recommendations", key = "#productId")
-    public List<RecommendationDto> getRecommendations(int productId) {
+    @CacheResult(cacheName = "recommendations")
+    public List<RecommendationDto> getRecommendations(@CacheKey int productId) {
         try {
             String url = recommendationServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the getRecommendations API on URL: {}", url);
@@ -133,8 +134,8 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    @CacheEvict(cacheNames = "recommendations", key = "#productId")
-    public void deleteRecommendations(int productId) {
+    @CacheRemove(cacheName = "recommendations")
+    public void deleteRecommendations(@CacheKey int productId) {
         try {
             String url = recommendationServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the deleteRecommendations API on URL: {}", url);
@@ -146,8 +147,8 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    @Cacheable(cacheNames = "reviews", key = "#productId")
-    public List<ReviewDto> getReviews(int productId) {
+    @CacheResult(cacheName = "reviews")
+    public List<ReviewDto> getReviews(@CacheKey int productId) {
         try {
             String url = reviewServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the getReviews API on URL: {}", url);
@@ -180,8 +181,8 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    @CacheEvict(cacheNames = "reviews", key = "#productId")
-    public void deleteReviews(int productId) {
+    @CacheRemove(cacheName = "reviews")
+    public void deleteReviews(@CacheKey int productId) {
         try {
             String url = reviewServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the deleteReviews API on URL: {}", url);
