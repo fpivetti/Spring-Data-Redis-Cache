@@ -22,9 +22,12 @@ import com.fpivetti.microservices.core.recommendation.persistence.Recommendation
 @ComponentScan("com.fpivetti")
 public class RecommendationServiceApplication {
 	private static final Logger LOG = LoggerFactory.getLogger(RecommendationServiceApplication.class);
+	private final MongoOperations mongoTemplate;
 
 	@Autowired
-	MongoOperations mongoTemplate;
+	public RecommendationServiceApplication(MongoOperations mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
 
 	public static void main(String[] args) {
 		ConfigurableApplicationContext ctx = SpringApplication.run(RecommendationServiceApplication.class, args);

@@ -22,9 +22,12 @@ import com.fpivetti.microservices.core.product.persistence.ProductEntity;
 @ComponentScan("com.fpivetti")
 public class ProductServiceApplication {
 	private static final Logger LOG = LoggerFactory.getLogger(ProductServiceApplication.class);
+	private final MongoOperations mongoTemplate;
 
 	@Autowired
-	MongoOperations mongoTemplate;
+	public ProductServiceApplication(MongoOperations mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
 
 	public static void main(String[] args) {
 		ConfigurableApplicationContext ctx = SpringApplication.run(ProductServiceApplication.class, args);

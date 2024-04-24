@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -52,6 +54,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
+    @Cacheable(cacheNames = "products", key = "#productId")
     public ProductDto getProduct(int productId) {
         try {
             String url = productServiceUrl + "/" + productId;
@@ -83,6 +86,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
+    @CacheEvict(cacheNames = "products", key = "#productId")
     public void deleteProduct(int productId) {
         try {
             String url = productServiceUrl + "/" + productId;
@@ -95,6 +99,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
+    @Cacheable(cacheNames = "recommendations", key = "#productId")
     public List<RecommendationDto> getRecommendations(int productId) {
         try {
             String url = recommendationServiceUrl + "?productId=" + productId;
@@ -128,6 +133,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
+    @CacheEvict(cacheNames = "recommendations", key = "#productId")
     public void deleteRecommendations(int productId) {
         try {
             String url = recommendationServiceUrl + "?productId=" + productId;
@@ -140,6 +146,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
+    @Cacheable(cacheNames = "reviews", key = "#productId")
     public List<ReviewDto> getReviews(int productId) {
         try {
             String url = reviewServiceUrl + "?productId=" + productId;
@@ -173,6 +180,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
+    @CacheEvict(cacheNames = "reviews", key = "#productId")
     public void deleteReviews(int productId) {
         try {
             String url = reviewServiceUrl + "?productId=" + productId;
