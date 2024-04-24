@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.cache.annotation.CacheKey;
+import javax.cache.annotation.CacheRemove;
+import javax.cache.annotation.CacheResult;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +30,8 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     }
 
     @Override
-    public ProductAggregateDto getProduct(int productId) {
+    @CacheResult(cacheName = "products")
+    public ProductAggregateDto getProduct(@CacheKey int productId) {
         LOG.debug("getCompositeProduct: lookup a product aggregate for productId: {}", productId);
         ProductDto productDto = integration.getProduct(productId);
         if (productDto == null) {
@@ -70,7 +74,8 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     }
 
     @Override
-    public void deleteProduct(int productId) {
+    @CacheRemove(cacheName = "products")
+    public void deleteProduct(@CacheKey int productId) {
         LOG.debug("deleteCompositeProduct: Deletes a product aggregate for productId: {}", productId);
         integration.deleteProduct(productId);
         integration.deleteRecommendations(productId);
