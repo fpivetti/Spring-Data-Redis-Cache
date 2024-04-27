@@ -8,7 +8,7 @@ public class ProductAggregateDto {
     private final int weight;
     private final List<RecommendationSummaryDto> recommendations;
     private final List<ReviewSummaryDto> reviews;
-    private final ServiceAddressesDto serviceAddressesDto;
+    private final ServiceAddressesDto serviceAddresses;
 
     public ProductAggregateDto() {
         productId = 0;
@@ -16,16 +16,16 @@ public class ProductAggregateDto {
         weight = 0;
         recommendations = null;
         reviews = null;
-        serviceAddressesDto = null;
+        serviceAddresses = null;
     }
 
-    public ProductAggregateDto(int productId, String name, int weight, List<RecommendationSummaryDto> recommendations, List<ReviewSummaryDto> reviews, ServiceAddressesDto serviceAddressesDto) {
+    public ProductAggregateDto(int productId, String name, int weight, List<RecommendationSummaryDto> recommendations, List<ReviewSummaryDto> reviews, ServiceAddressesDto serviceAddresses) {
         this.productId = productId;
         this.name = name;
         this.weight = weight;
         this.recommendations = recommendations;
         this.reviews = reviews;
-        this.serviceAddressesDto = serviceAddressesDto;
+        this.serviceAddresses = serviceAddresses;
     }
 
     public int getProductId() {
@@ -49,6 +49,6 @@ public class ProductAggregateDto {
     }
 
     public ServiceAddressesDto getServiceAddresses() {
-        return serviceAddressesDto;
+        return serviceAddresses;
     }
 }

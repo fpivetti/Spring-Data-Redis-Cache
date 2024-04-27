@@ -77,6 +77,16 @@ api:
 server.port: 7000
 server.error.include-message: always
 
+spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 6000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 app:
   product-service:
     host: localhost
@@ -92,10 +102,12 @@ logging:
   level:
     root: INFO
     com.fpivetti: DEBUG
+    org.springframework.cache: TRACE
 
 ---
 spring.config.activate.on-profile: docker
 server.port: 8080
+spring.data.redis.host: redis
 
 app:
   product-service:
@@ -107,3 +119,4 @@ app:
   review-service:
     host: review
     port: 8080
+
