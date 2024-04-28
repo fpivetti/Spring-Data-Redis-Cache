@@ -69,6 +69,7 @@ services:
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pwd
+      - POSTGRES_ROOT_PASSWORD=rootpwd
       - POSTGRES_DB=review-db
     healthcheck:
       test: "/usr/bin/pg_isready"

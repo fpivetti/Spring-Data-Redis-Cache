@@ -80,8 +80,6 @@ server.error.include-message: always
 spring:
   cache:
     type: redis
-    redis:
-      time-to-live: 6000
   data:
     redis:
       host: localhost
