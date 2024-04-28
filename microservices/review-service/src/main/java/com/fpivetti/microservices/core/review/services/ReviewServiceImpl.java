@@ -44,11 +44,19 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewDto createReview(ReviewDto body) {
         try {
+            if (body.getProductId() < 1) {
+                throw new InvalidInputException("Invalid productId: " + body.getProductId());
+            }
+            if (body.getReviewId() < 1) {
+                LOG.warn("Invalid reviewId: {}, skipping to the next entity", body.getReviewId());
+                return new ReviewDto();
+            }
             ReviewEntity entity = mapper.apiToEntity(body);
             ReviewEntity newEntity = repository.save(entity);
 
             LOG.debug("createReview: created a review entity: {}/{}", body.getProductId(), body.getReviewId());
             return mapper.entityToApi(newEntity);
+
         } catch (DataIntegrityViolationException dive) {
             throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Review Id: " + body.getReviewId());
         }

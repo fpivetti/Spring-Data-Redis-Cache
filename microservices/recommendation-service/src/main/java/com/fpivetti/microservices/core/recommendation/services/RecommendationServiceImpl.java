@@ -48,11 +48,19 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     public RecommendationDto createRecommendation(RecommendationDto body) {
         try {
+            if (body.getProductId() < 1) {
+                throw new InvalidInputException("Invalid productId: " + body.getProductId());
+            }
+            if (body.getRecommendationId() < 1) {
+                LOG.warn("Invalid recommendationId: {}, skipping to the next entity", body.getRecommendationId());
+                return new RecommendationDto();
+            }
             RecommendationEntity entity = mapper.apiToEntity(body);
             RecommendationEntity newEntity = repository.save(entity);
 
             LOG.debug("createRecommendation: created a recommendation entity: {}/{}", body.getProductId(), body.getRecommendationId());
             return mapper.entityToApi(newEntity);
+
         } catch (DuplicateKeyException dke) {
             throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Recommendation Id: " + body.getRecommendationId());
         }

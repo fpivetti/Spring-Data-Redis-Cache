@@ -4,16 +4,14 @@ import com.fpivetti.api.composite.product.*;
 import com.fpivetti.api.core.product.ProductDto;
 import com.fpivetti.api.core.recommendation.RecommendationDto;
 import com.fpivetti.api.core.review.ReviewDto;
-import com.fpivetti.api.exceptions.NotFoundException;
 import com.fpivetti.util.http.ServiceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CacheRemove;
-import javax.cache.annotation.CacheResult;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,14 +28,10 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     }
 
     @Override
-    @CacheResult(cacheName = "products")
-    public ProductAggregateDto getProduct(@CacheKey int productId) {
+    @Cacheable(cacheNames = "products", key = "#productId")
+    public ProductAggregateDto getProduct(int productId) {
         LOG.debug("getCompositeProduct: lookup a product aggregate for productId: {}", productId);
         ProductDto productDto = integration.getProduct(productId);
-        if (productDto == null) {
-            throw new NotFoundException("No product found for productId: " + productId);
-        }
-
         List<RecommendationDto> recommendations = integration.getRecommendations(productId);
         List<ReviewDto> reviews = integration.getReviews(productId);
         LOG.debug("getCompositeProduct: aggregate entity found for productId: {}", productId);
@@ -51,14 +45,14 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
             ProductDto productDto = new ProductDto(body.getProductId(), body.getName(), body.getWeight(), null);
             integration.createProduct(productDto);
 
-            if(body.getRecommendations() != null) {
+            if (body.getRecommendations() != null) {
                 body.getRecommendations().forEach(r -> {
                     RecommendationDto recommendationDto = new RecommendationDto(body.getProductId(),
                             r.getRecommendationId(), r.getAuthor(), r.getRate(), r.getContent(), null);
                     integration.createRecommendation(recommendationDto);
                 });
             }
-            if(body.getReviews() != null) {
+            if (body.getReviews() != null) {
                 body.getReviews().forEach(r -> {
                     ReviewDto reviewDto = new ReviewDto(body.getProductId(), r.getReviewId(), r.getAuthor(),
                             r.getSubject(), r.getContent(), null);
@@ -67,15 +61,15 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
             }
             LOG.debug("createCompositeProduct: composite entities created for productId: {}", body.getProductId());
 
-        } catch (RuntimeException re) {
-            LOG.warn("createCompositeProduct failed", re);
-            throw re;
+        } catch (Exception e) {
+            LOG.warn("createCompositeProduct failed: {}", e.getMessage());
+            throw e;
         }
     }
 
     @Override
-    @CacheRemove(cacheName = "products")
-    public void deleteProduct(@CacheKey int productId) {
+    @CacheEvict(cacheNames = "products", key = "#productId")
+    public void deleteProduct(int productId) {
         LOG.debug("deleteCompositeProduct: Deletes a product aggregate for productId: {}", productId);
         integration.deleteProduct(productId);
         integration.deleteRecommendations(productId);

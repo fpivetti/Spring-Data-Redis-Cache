@@ -119,7 +119,9 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             LOG.debug("Will post a new recommendation to URL: {}", recommendationServiceUrl);
             RecommendationDto recommendationDto = restTemplate.postForObject(recommendationServiceUrl, body, RecommendationDto.class);
             assert recommendationDto != null;
-            LOG.debug("Created a recommendation with id: {}", recommendationDto.getProductId());
+            if(recommendationDto.getRecommendationId() != 0) {
+                LOG.debug("Created a recommendation for product with id: {}", recommendationDto.getProductId());
+            }
             return recommendationDto;
 
         } catch (HttpClientErrorException ex) {
@@ -164,7 +166,9 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             LOG.debug("Will post a new review to URL: {}", reviewServiceUrl);
             ReviewDto reviewDto = restTemplate.postForObject(reviewServiceUrl, body, ReviewDto.class);
             assert reviewDto != null;
-            LOG.debug("Created a review with id: {}", reviewDto.getProductId());
+            if(reviewDto.getReviewId() != 0) {
+                LOG.debug("Created a review for product with id: {}", reviewDto.getProductId());
+            }
             return reviewDto;
 
         } catch (HttpClientErrorException ex) {
