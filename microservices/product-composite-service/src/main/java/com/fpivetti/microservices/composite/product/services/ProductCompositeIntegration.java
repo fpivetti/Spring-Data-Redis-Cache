@@ -88,6 +88,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             String url = productServiceUrl + "/" + productId;
             LOG.debug("Will call the deleteProduct API on URL: {}", url);
             restTemplate.delete(url);
+            LOG.debug("Deleted a product with id: {}", productId);
 
         } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);
@@ -135,6 +136,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             String url = recommendationServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the deleteRecommendations API on URL: {}", url);
             restTemplate.delete(url);
+            LOG.debug("Deleted all the recommendations for product with id: {}", productId);
 
         } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);
@@ -182,6 +184,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             String url = reviewServiceUrl + "?productId=" + productId;
             LOG.debug("Will call the deleteReviews API on URL: {}", url);
             restTemplate.delete(url);
+            LOG.debug("Deleted all the reviews for product with id: {}", productId);
 
         } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);

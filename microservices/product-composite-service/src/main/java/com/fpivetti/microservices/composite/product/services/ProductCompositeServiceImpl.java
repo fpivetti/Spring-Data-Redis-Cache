@@ -30,12 +30,17 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     @Override
     @Cacheable(cacheNames = "products", key = "#productId")
     public ProductAggregateDto getProduct(int productId) {
-        LOG.debug("getCompositeProduct: lookup a product aggregate for productId: {}", productId);
-        ProductDto productDto = integration.getProduct(productId);
-        List<RecommendationDto> recommendations = integration.getRecommendations(productId);
-        List<ReviewDto> reviews = integration.getReviews(productId);
-        LOG.debug("getCompositeProduct: aggregate entity found for productId: {}", productId);
-        return createProductAggregate(productDto, recommendations, reviews, serviceUtil.getServiceAddress());
+        try {
+            LOG.debug("getCompositeProduct: lookup a product aggregate for productId: {}", productId);
+            ProductDto productDto = integration.getProduct(productId);
+            List<RecommendationDto> recommendations = integration.getRecommendations(productId);
+            List<ReviewDto> reviews = integration.getReviews(productId);
+            LOG.debug("getCompositeProduct: aggregate entity found for productId: {}", productId);
+            return createProductAggregate(productDto, recommendations, reviews, serviceUtil.getServiceAddress());
+        } catch (Exception e) {
+            LOG.warn("getCompositeProduct failed: {}", e.getMessage());
+            throw e;
+        }
     }
 
     @Override
@@ -70,11 +75,19 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     @Override
     @CacheEvict(cacheNames = "products", key = "#productId")
     public void deleteProduct(int productId) {
-        LOG.debug("deleteCompositeProduct: Deletes a product aggregate for productId: {}", productId);
-        integration.deleteProduct(productId);
-        integration.deleteRecommendations(productId);
-        integration.deleteReviews(productId);
-        LOG.debug("deleteCompositeProduct: aggregate entities deleted for productId: {}", productId);
+        try {
+            LOG.debug("deleteCompositeProduct: deletes a product aggregate for productId: {}", productId);
+            integration.deleteProduct(productId);
+            integration.deleteRecommendations(productId);
+            integration.deleteReviews(productId);
+            LOG.debug("deleteCompositeProduct: aggregate entities deleted for productId: {}", productId);
+        } catch (Exception e) {
+            LOG.warn("deleteCompositeProduct failed: {}", e.getMessage());
+            LOG.debug("deleteCompositeProduct: deletes any recommendations or reviews still left and then throws the exception");
+            integration.deleteRecommendations(productId);
+            integration.deleteReviews(productId);
+            throw e;
+        }
     }
 
     private ProductAggregateDto createProductAggregate(ProductDto productDto, List<RecommendationDto> recommendations, List<ReviewDto> reviews, String serviceAddress) {

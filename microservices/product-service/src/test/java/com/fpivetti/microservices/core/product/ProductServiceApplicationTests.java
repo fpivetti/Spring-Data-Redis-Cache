@@ -78,7 +78,7 @@ class ProductServiceApplicationTests extends MongoDbTestBase{
 		deleteAndVerifyProduct(PRODUCT_ID_OK, OK);
 		assertFalse(repository.findByProductId(PRODUCT_ID_OK).isPresent());
 
-		deleteAndVerifyProduct(PRODUCT_ID_OK, OK);
+		deleteAndVerifyProduct(PRODUCT_ID_OK, NOT_FOUND);
 	}
 
 	private WebTestClient.BodyContentSpec getAndVerifyProduct(int productId, HttpStatus expectedStatus) {

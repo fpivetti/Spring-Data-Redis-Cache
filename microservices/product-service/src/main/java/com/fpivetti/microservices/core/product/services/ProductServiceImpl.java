@@ -61,6 +61,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProduct(int productId) {
         LOG.debug("deleteProduct: tries to delete an entity with productId: {}", productId);
-        repository.findByProductId(productId).ifPresent(repository::delete);
+        if (productId < 1) {
+            throw new InvalidInputException("Invalid productId: " + productId);
+        }
+        repository.findByProductId(productId).ifPresentOrElse(repository::delete, () -> { throw new NotFoundException("No product found for productId: " + productId); });
+        LOG.debug("deleteProduct: entity deleted for productId: {}", productId);
     }
 }

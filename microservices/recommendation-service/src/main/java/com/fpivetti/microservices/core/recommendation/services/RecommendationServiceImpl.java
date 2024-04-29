@@ -3,7 +3,6 @@ package com.fpivetti.microservices.core.recommendation.services;
 import com.fpivetti.api.core.recommendation.RecommendationDto;
 import com.fpivetti.api.core.recommendation.RecommendationService;
 import com.fpivetti.api.exceptions.InvalidInputException;
-import com.fpivetti.api.exceptions.NotFoundException;
 import com.fpivetti.microservices.core.recommendation.persistence.RecommendationEntity;
 import com.fpivetti.microservices.core.recommendation.persistence.RecommendationRepository;
 import com.fpivetti.util.http.ServiceUtil;
@@ -35,13 +34,10 @@ public class RecommendationServiceImpl implements RecommendationService {
             throw new InvalidInputException("Invalid productId: " + productId);
         }
         List<RecommendationEntity> entityList = repository.findByProductId(productId);
-        if (entityList.isEmpty()) {
-            throw new NotFoundException("No recommendations found for productId: " + productId);
-        }
         List<RecommendationDto> recommendationDtoList = mapper.entityListToApiList(entityList);
         recommendationDtoList.forEach(e -> e.setServiceAddress(serviceUtil.getServiceAddress()));
 
-        LOG.debug("/recommendation response size: {}", recommendationDtoList.size());
+        LOG.debug("getRecommendations response size: {}", recommendationDtoList.size());
         return recommendationDtoList;
     }
 
@@ -68,7 +64,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     public void deleteRecommendations(int productId) {
-        LOG.debug("deleteRecommendations: tries to delete recommendations for the product with productId: {}", productId);
+        LOG.debug("deleteRecommendations: tries to delete recommendations for product with id: {}", productId);
+        if (productId < 1) {
+            throw new InvalidInputException("Invalid productId: " + productId);
+        }
         repository.deleteAll(repository.findByProductId(productId));
+        LOG.debug("deleteRecommendations: recommendations deleted for product with id: {}", productId);
     }
 }

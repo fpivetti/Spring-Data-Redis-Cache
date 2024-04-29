@@ -49,8 +49,8 @@ class RecommendationServiceApplicationTests extends MongoDbTestBase {
 
 	@Test
 	void getRecommendationsNotFound() {
-		getAndVerifyRecommendationsByProductId(PRODUCT_ID_NOT_FOUND, NOT_FOUND)
-				.jsonPath("$.message").isEqualTo("No recommendations found for productId: " + PRODUCT_ID_NOT_FOUND);
+		getAndVerifyRecommendationsByProductId(PRODUCT_ID_NOT_FOUND, OK)
+				.jsonPath("$.length()").isEqualTo(0);
 	}
 
 	@Test
