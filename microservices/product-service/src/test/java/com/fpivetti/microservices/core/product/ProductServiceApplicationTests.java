@@ -17,9 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class ProductServiceApplicationTests extends MongoDbTestBase{
+class ProductServiceApplicationTests extends MongoDbTestBase {
 	private static final int PRODUCT_ID_OK = 1;
-	private static final int PRODUCT_ID_NOT_FOUND = 13;
+	private static final int PRODUCT_ID_NOT_FOUND = 2;
 	private static final int PRODUCT_ID_INVALID = -1;
 
 	@Autowired
@@ -37,7 +37,8 @@ class ProductServiceApplicationTests extends MongoDbTestBase{
 	void getProductById() {
 		postAndVerifyProduct(PRODUCT_ID_OK, OK);
 		assertTrue(repository.findByProductId(PRODUCT_ID_OK).isPresent());
-		getAndVerifyProduct(PRODUCT_ID_OK, OK).jsonPath("$.productId").isEqualTo(PRODUCT_ID_OK);
+		getAndVerifyProduct(PRODUCT_ID_OK, OK)
+				.jsonPath("$.productId").isEqualTo(PRODUCT_ID_OK);
 	}
 
 	@Test
@@ -62,6 +63,13 @@ class ProductServiceApplicationTests extends MongoDbTestBase{
 	}
 
 	@Test
+	void createProductInvalidParameterNegativeValue() {
+		postAndVerifyProduct(PRODUCT_ID_INVALID, UNPROCESSABLE_ENTITY)
+				.jsonPath("$.path").isEqualTo("/product")
+				.jsonPath("$.message").isEqualTo("Invalid productId: " + PRODUCT_ID_INVALID);
+	}
+
+	@Test
 	void duplicateError() {
 		postAndVerifyProduct(PRODUCT_ID_OK, OK);
 		assertTrue(repository.findByProductId(PRODUCT_ID_OK).isPresent());
@@ -78,7 +86,16 @@ class ProductServiceApplicationTests extends MongoDbTestBase{
 		deleteAndVerifyProduct(PRODUCT_ID_OK, OK);
 		assertFalse(repository.findByProductId(PRODUCT_ID_OK).isPresent());
 
-		deleteAndVerifyProduct(PRODUCT_ID_OK, NOT_FOUND);
+		deleteAndVerifyProduct(PRODUCT_ID_OK, NOT_FOUND)
+				.jsonPath("$.path").isEqualTo("/product/" + PRODUCT_ID_OK)
+				.jsonPath("$.message").isEqualTo("No product found for productId: " + PRODUCT_ID_OK);
+	}
+
+	@Test
+	void deleteProductInvalidParameterNegativeValue() {
+		deleteAndVerifyProduct(PRODUCT_ID_INVALID, UNPROCESSABLE_ENTITY)
+				.jsonPath("$.path").isEqualTo("/product/" + PRODUCT_ID_INVALID)
+				.jsonPath("$.message").isEqualTo("Invalid productId: " + PRODUCT_ID_INVALID);
 	}
 
 	private WebTestClient.BodyContentSpec getAndVerifyProduct(int productId, HttpStatus expectedStatus) {

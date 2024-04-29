@@ -18,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class RecommendationServiceApplicationTests extends MongoDbTestBase {
 	private static final int PRODUCT_ID_OK = 1;
-	private static final int PRODUCT_ID_NOT_FOUND = 113;
+	private static final int PRODUCT_ID_NOT_FOUND = 2;
 	private static final int PRODUCT_ID_INVALID = -1;
 
 	@Autowired
@@ -35,14 +35,14 @@ class RecommendationServiceApplicationTests extends MongoDbTestBase {
 	@Test
 	void getRecommendationsByProductId() {
 		assertEquals(0, repository.findByProductId(PRODUCT_ID_OK).size());
+		postAndVerifyRecommendation(PRODUCT_ID_OK, 0, OK);
 		postAndVerifyRecommendation(PRODUCT_ID_OK, 1, OK);
 		postAndVerifyRecommendation(PRODUCT_ID_OK, 2, OK);
-		postAndVerifyRecommendation(PRODUCT_ID_OK, 3, OK);
 
-		assertEquals(3, repository.findByProductId(PRODUCT_ID_OK).size());
+		assertEquals(2, repository.findByProductId(PRODUCT_ID_OK).size());
 
 		getAndVerifyRecommendationsByProductId(PRODUCT_ID_OK, OK)
-				.jsonPath("$.length()").isEqualTo(3)
+				.jsonPath("$.length()").isEqualTo(2)
 				.jsonPath("$[0].productId").isEqualTo(PRODUCT_ID_OK)
 				.jsonPath("$[0].recommendationId").isEqualTo(1);
 	}
@@ -75,6 +75,20 @@ class RecommendationServiceApplicationTests extends MongoDbTestBase {
 	}
 
 	@Test
+	void createRecommendationInvalidParameterNegativeValue() {
+		postAndVerifyRecommendation(PRODUCT_ID_INVALID, 1, UNPROCESSABLE_ENTITY)
+				.jsonPath("$.path").isEqualTo("/recommendation")
+				.jsonPath("$.message").isEqualTo("Invalid productId: " + PRODUCT_ID_INVALID);
+	}
+
+	@Test
+	void createRecommendationInvalidRecommendationIdNegativeValue() {
+		postAndVerifyRecommendation(PRODUCT_ID_OK, -1, OK);
+		getAndVerifyRecommendationsByProductId(PRODUCT_ID_OK, OK)
+				.jsonPath("$.length()").isEqualTo(0);
+	}
+
+	@Test
 	void duplicateError() {
 		int recommendationId = 1;
 		assertEquals(0, repository.count());
@@ -101,6 +115,13 @@ class RecommendationServiceApplicationTests extends MongoDbTestBase {
 		assertEquals(0, repository.findByProductId(PRODUCT_ID_OK).size());
 
 		deleteAndVerifyRecommendationsByProductId(PRODUCT_ID_OK, OK);
+	}
+
+	@Test
+	void deleteRecommendationsInvalidParameterNegativeValue() {
+		deleteAndVerifyRecommendationsByProductId(PRODUCT_ID_INVALID, UNPROCESSABLE_ENTITY)
+				.jsonPath("$.path").isEqualTo("/recommendation")
+				.jsonPath("$.message").isEqualTo("Invalid productId: " + PRODUCT_ID_INVALID);
 	}
 
 	private WebTestClient.BodyContentSpec getAndVerifyRecommendationsByProductId(int productId, HttpStatus expectedStatus) {

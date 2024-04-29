@@ -25,13 +25,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class ProductCompositeServiceApplicationTests {
+class ProductCompositeServiceApplicationTests extends RedisDbTestBase {
 	private static final int PRODUCT_ID_OK = 1;
 	private static final int PRODUCT_ID_NOT_FOUND = 2;
-	private static final int PRODUCT_ID_INVALID = 3;
+	private static final int PRODUCT_ID_INVALID = -1;
 
 	@Autowired
 	private WebTestClient client;
+
 	@MockBean
 	private ProductCompositeIntegration compositeIntegration;
 
@@ -71,7 +72,6 @@ class ProductCompositeServiceApplicationTests {
 				singletonList(new RecommendationSummaryDto(1, "a", 1, "c")),
 				singletonList(new ReviewSummaryDto(1, "a", "s", "c")), null);
 		postAndVerifyProduct(compositeProduct, OK);
-		deleteAndVerifyProduct(compositeProduct.getProductId(), OK);
 		deleteAndVerifyProduct(compositeProduct.getProductId(), OK);
 	}
 

@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class ReviewServiceApplicationTests extends PostgresTestBase{
+class ReviewServiceApplicationTests extends PostgresTestBase {
 	private static final int PRODUCT_ID_OK = 1;
 	private static final int PRODUCT_ID_NOT_FOUND = 213;
 	private static final int PRODUCT_ID_INVALID = -1;
@@ -35,14 +35,14 @@ class ReviewServiceApplicationTests extends PostgresTestBase{
 	@Test
 	void getReviewsByProductId() {
 		assertEquals(0, repository.findByProductId(PRODUCT_ID_OK).size());
+		postAndVerifyReview(PRODUCT_ID_OK, 0, OK);
 		postAndVerifyReview(PRODUCT_ID_OK, 1, OK);
 		postAndVerifyReview(PRODUCT_ID_OK, 2, OK);
-		postAndVerifyReview(PRODUCT_ID_OK, 3, OK);
 
-		assertEquals(3, repository.findByProductId(PRODUCT_ID_OK).size());
+		assertEquals(2, repository.findByProductId(PRODUCT_ID_OK).size());
 
 		getAndVerifyReviewsByProductId(PRODUCT_ID_OK, OK)
-				.jsonPath("$.length()").isEqualTo(3)
+				.jsonPath("$.length()").isEqualTo(2)
 				.jsonPath("$[0].productId").isEqualTo(PRODUCT_ID_OK)
 				.jsonPath("$[0].reviewId").isEqualTo(1);
 	}
@@ -75,6 +75,20 @@ class ReviewServiceApplicationTests extends PostgresTestBase{
 	}
 
 	@Test
+	void createReviewInvalidParameterNegativeValue() {
+		postAndVerifyReview(PRODUCT_ID_INVALID, 1, UNPROCESSABLE_ENTITY)
+				.jsonPath("$.path").isEqualTo("/review")
+				.jsonPath("$.message").isEqualTo("Invalid productId: " + PRODUCT_ID_INVALID);
+	}
+
+	@Test
+	void createReviewInvalidReviewIdNegativeValue() {
+		postAndVerifyReview(PRODUCT_ID_OK, -1, OK);
+		getAndVerifyReviewsByProductId(PRODUCT_ID_OK, OK)
+				.jsonPath("$.length()").isEqualTo(0);
+	}
+
+	@Test
 	void duplicateError() {
 		int reviewId = 1;
 		assertEquals(0, repository.count());
@@ -101,6 +115,13 @@ class ReviewServiceApplicationTests extends PostgresTestBase{
 		assertEquals(0, repository.findByProductId(PRODUCT_ID_OK).size());
 
 		deleteAndVerifyReviewsByProductId(PRODUCT_ID_OK, OK);
+	}
+
+	@Test
+	void deleteReviewsInvalidParameterNegativeValue() {
+		deleteAndVerifyReviewsByProductId(PRODUCT_ID_INVALID, UNPROCESSABLE_ENTITY)
+				.jsonPath("$.path").isEqualTo("/review")
+				.jsonPath("$.message").isEqualTo("Invalid productId: " + PRODUCT_ID_INVALID);
 	}
 
 	private WebTestClient.BodyContentSpec getAndVerifyReviewsByProductId(int productId, HttpStatus expectedStatus) {
