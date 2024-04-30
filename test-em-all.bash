@@ -52,7 +52,8 @@ function assertEqual() {
 
 function testUrl() {
   url=$*
-  if $url -ks -f -o /dev/null
+  response=$($url -ks -o /dev/null -I -w "%{http_code}")
+  if [ "$response" = "404" ]
   then
     return 0
   else
@@ -83,7 +84,7 @@ function recreateComposite() {
   local productId=$1
   local composite=$2
 
-  assertCurl 200 "curl -X DELETE http://$HOST:$PORT/product-composite/${productId} -s"
+  assertCurl 404 "curl -X DELETE http://$HOST:$PORT/product-composite/${productId} -s"
   curl -X POST http://$HOST:$PORT/product-composite -H "Content-Type: application/json" --data "$composite"
 }
 
@@ -145,6 +146,8 @@ waitForService curl -X DELETE http://$HOST:$PORT/product-composite/$PROD_ID_NOT_
 
 setupTestData
 
+echo "setupTestData completed: starting tests..."
+
 # Verify that a normal request works, expect three recommendations and three reviews
 assertCurl 200 "curl http://$HOST:$PORT/product-composite/$PROD_ID_REVS_RECS -s"
 assertEqual $PROD_ID_REVS_RECS "$(echo "$RESPONSE" | jq .productId)"
@@ -171,12 +174,12 @@ assertEqual 0 "$(echo "$RESPONSE" | jq ".reviews | length")"
 assertCurl 422 "curl http://$HOST:$PORT/product-composite/-1 -s"
 assertEqual "\"Invalid productId: -1\"" "$(echo "$RESPONSE" | jq .message)"
 
-# Verify that a 400 (Bad Request) error error is returned for a productId that is not a number, i.e. invalid format
+# Verify that a 400 (Bad Request) error is returned for a productId that is not a number, i.e. invalid format
 assertCurl 400 "curl http://$HOST:$PORT/product-composite/invalidProductId -s"
 assertEqual "\"Type mismatch.\"" "$(echo "$RESPONSE" | jq .message)"
 
 # Verify access to Swagger and OpenAPI URLs
-echo "Swagger/OpenAPI tests"
+echo "Swagger/OpenAPI tests:"
 assertCurl 302 "curl -s  http://$HOST:$PORT/openapi/swagger-ui.html"
 assertCurl 200 "curl -sL http://$HOST:$PORT/openapi/swagger-ui.html"
 assertCurl 200 "curl -s  http://$HOST:$PORT/openapi/webjars/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config"
@@ -184,6 +187,12 @@ assertCurl 200 "curl -s  http://$HOST:$PORT/openapi/v3/api-docs"
 assertEqual "3.0.1" "$(echo "$RESPONSE" | jq -r .openapi)"
 assertEqual "http://$HOST:$PORT" "$(echo "$RESPONSE" | jq -r '.servers[0].url')"
 assertCurl 200 "curl -s  http://$HOST:$PORT/openapi/v3/api-docs.yaml"
+
+# Verify that a 200 (OK) response code is returned when we try to delete all entities from the DBs
+echo "Functional test completed! Removing all entities from DBs:"
+assertCurl 200 "curl -X DELETE http://$HOST:$PORT/product-composite/$PROD_ID_REVS_RECS -s"
+assertCurl 200 "curl -X DELETE http://$HOST:$PORT/product-composite/$PROD_ID_NO_RECS -s"
+assertCurl 200 "curl -X DELETE http://$HOST:$PORT/product-composite/$PROD_ID_NO_REVS -s"
 
 for value in "$@"
 do
