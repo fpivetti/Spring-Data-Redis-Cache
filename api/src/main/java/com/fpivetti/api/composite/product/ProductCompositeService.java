@@ -41,6 +41,7 @@ public interface ProductCompositeService {
             summary = "${api.product-composite.create-composite-product.summary}",
             description = "${api.product-composite.create-composite-product.description}")
     @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "${api.responseCodes.ok.description}"),
             @ApiResponse(responseCode = "400", description = "${api.responseCodes.badRequest.description}"),
             @ApiResponse(responseCode = "422", description = "${api.responseCodes.unprocessableEntity.description}")
     })
@@ -58,7 +59,9 @@ public interface ProductCompositeService {
             summary = "${api.product-composite.delete-composite-product.summary}",
             description = "${api.product-composite.delete-composite-product.description}")
     @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "${api.responseCodes.ok.description}"),
             @ApiResponse(responseCode = "400", description = "${api.responseCodes.badRequest.description}"),
+            @ApiResponse(responseCode = "404", description = "${api.responseCodes.notFound.description}"),
             @ApiResponse(responseCode = "422", description = "${api.responseCodes.unprocessableEntity.description}")
     })
     @DeleteMapping(value = "/product-composite/{productId}")

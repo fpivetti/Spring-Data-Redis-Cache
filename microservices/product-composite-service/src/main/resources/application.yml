@@ -28,51 +28,74 @@ api:
 
   product-composite:
     get-composite-product:
-      summary: Returns a composite view of the specified product id
+      summary: Returns a composite view of the specified productId
       description: |
-        # Normal response
-        If the requested product id is found the method will return information regarding:
+        Retrieves information related to the specified productId, including:
         1. Base product information
-        1. Reviews
-        1. Recommendations
-        1. Service Addresses (technical information regarding the addresses of the microservices that created the response)
+        
+        2. Reviews
+        
+        3. Recommendations
+        
+        4. Service Addresses (technical information regarding the addresses of the microservices that created the response)
 
-        # Expected partial and error responses
-        In the following cases, only a partial response has been created (used to simplify testing of error conditions)
-
-        ## Product id 113
-        200 - Ok, but no recommendations will be returned
-
-        ## Product id 213
-        200 - Ok, but no reviews will be returned
-
-        ## Non numerical product id
-        400 - A **Bad Request** error will be returned
-
-        ## Product id 13
-        404 - A **Not Found** error will be returned
-
-        ## Negative product ids
-        422 - An **Unprocessable Entity** error will be returned
+        # Normal response
+        If the requested productId is found, the method will return all the information stored in the database related to that productId.
+        
+        # Expected error responses
+        1. If the specified productId doesn't exist, a **404 - Not Found** error with a "No product found" message will be returned
+        
+        2. If a productId less than 1 is specified, a **422 - Unprocessable Entity** error with a "Invalid productId" message will be returned
+        
+        3. If a non-numerical productId is specified, a **400 - Bad Request** error with a "Failed to read HTTP" message will be returned
 
     create-composite-product:
       summary: Creates a composite product
       description: |
-        # Normal response
-        The composite product information posted to the API will be split up and stored as separate product-info, recommendation and review entities.
+        Creates a composite product by splitting the provided information into separate product-info, recommendation, and review entities.
         
+        # Normal response
+        The composite product information posted to the API will be split and stored accordingly.
+        
+        If a recommendationId or a reviewId is less than 1, the creation of that entity will be skipped without throwing any exceptions.
+        This means that you can't create a composite product with an Id less than 1 and the system will automatically jump to the next recommendation or review.
+        If all IDs are less than 1, a product with no recommendations and reviews will be generated.
+
         # Expected error responses
         1. If a product with the same productId as specified in the posted information already exists,
-           an **422 - Unprocessable Entity** error with a "duplicate key" error message will be returned
+           a **422 - Unprocessable Entity** error with a "duplicate key" message will be returned
+        
+        2. If a product with a productId less than 1 is specified, a **422 - Unprocessable Entity** error with a "Invalid productId" message will be returned
+        
+        3. If a product with a non-numerical productId is specified, a **400 - Bad Request** error with a "Failed to read HTTP" message will be returned
 
     delete-composite-product:
-      summary: Deletes a product composite
+      summary: Deletes a composite product
       description: |
+        Deletes a composite product along with associated entities such as product information, recommendations, and reviews.
+        
         # Normal response
-        Entities for product information, recommendations and reviews related to the specified productId will be deleted.
-        The implementation of the delete method is idempotent, i.e. it can be called several times with the same response.
+        Entities related to the specified productId will be deleted. The implementation of the delete method is idempotent, 
+        i.e. it can be called several times without changing the delete state.
+        
+        The first call of a DELETE may return a **200 - OK**. Subsequent DELETE calls for the same productId will likely return a **404 - Not Found** error.
+        Even if the response code is different after the first request, there is no change of state.
 
-        This means that a delete request of a non-existing product will return **200 Ok**.
+        If a network timeout occurs during a delete operation, you can simply call the delete operation again:
+          - If the first request wasn't completed successfully, the second request will delete the product and return a **200 - OK**.
+        
+          - If the product was deleted after the first request, the second call will return a **404 - Not Found** error.
+
+        Before returning the response code, all recommendation and review entities related to the specified productId will be attempted for deletion, 
+        even if they were already removed after the first request.
+  
+        # Expected error responses
+        1. If a product has already been deleted and its entities are no longer available in the database, 
+          a **404 - Not Found** error with a "No product found" message will be returned
+        
+        2. If a productId less than 1 is specified, a **422 - Unprocessable Entity** error with a "Invalid productId" message will be returned
+        
+        3. If a non-numerical productId is specified, a **400 - Bad Request** error with a "Failed to read HTTP" message will be returned
 
 server.port: 7000
 server.error.include-message: always
