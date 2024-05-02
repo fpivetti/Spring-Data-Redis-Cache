@@ -7,24 +7,24 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-public abstract class RedisDbTestBase {
+public abstract class RedisCacheTestBase {
 
     @ServiceConnection
-    private static final RedisContainer database = new RedisContainer("redis:latest");
+    private static final RedisContainer cache = new RedisContainer("redis:latest");
 
     @BeforeAll
     static void beforeAll() {
-        database.start();
+        cache.start();
     }
 
     @AfterAll
     static void afterAll() {
-        database.stop();
+        cache.stop();
     }
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("redis.host", database::getHost);
-        registry.add("redis.port", database::getFirstMappedPort);
+        registry.add("spring.data.redis.host", cache::getHost);
+        registry.add("spring.data.redis.port", cache::getFirstMappedPort);
     }
 }

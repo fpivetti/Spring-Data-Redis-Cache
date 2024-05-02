@@ -1,7 +1,7 @@
 package com.fpivetti.microservices.composite.product;
 
 import static java.util.Collections.singletonList;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -21,17 +21,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.Objects;
+
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class ProductCompositeServiceApplicationTests extends RedisDbTestBase {
+class ProductCompositeServiceApplicationTests extends RedisCacheTestBase {
 	private static final int PRODUCT_ID_OK = 1;
 	private static final int PRODUCT_ID_NOT_FOUND = 2;
 	private static final int PRODUCT_ID_INVALID = -1;
 
 	@Autowired
 	private WebTestClient client;
+
+	@Autowired
+	private CacheManager cacheManager;
 
 	@MockBean
 	private ProductCompositeIntegration compositeIntegration;
@@ -50,6 +56,9 @@ class ProductCompositeServiceApplicationTests extends RedisDbTestBase {
 
 		when(compositeIntegration.getProduct(PRODUCT_ID_INVALID))
 				.thenThrow(new InvalidInputException("INVALID: " + PRODUCT_ID_INVALID));
+
+		// Before each test we clear the cache removing all saved entities
+		cacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(cacheManager.getCache(cacheName)).clear());
 	}
 
 	@Test
@@ -95,6 +104,23 @@ class ProductCompositeServiceApplicationTests extends RedisDbTestBase {
 		getAndVerifyProduct(PRODUCT_ID_INVALID, UNPROCESSABLE_ENTITY)
 				.jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_INVALID)
 				.jsonPath("$.message").isEqualTo("INVALID: " + PRODUCT_ID_INVALID);
+	}
+
+	@Test
+	void getProductByIdFromCache() {
+		getAndVerifyProduct(PRODUCT_ID_OK, OK);
+		// Verify that the second time we call the GET operation, it will retrieve the result from the cache
+		getAndVerifyProduct(PRODUCT_ID_OK, OK);
+		verify(compositeIntegration, times(1)).getProduct(PRODUCT_ID_OK);
+	}
+
+	@Test
+	void deleteCompositeProductFromCache() {
+		getAndVerifyProduct(PRODUCT_ID_OK, OK);
+		deleteAndVerifyProduct(PRODUCT_ID_OK, OK);
+		// Verify that if we call the GET operation, it will invoke the getProduct method since no entries are found in the cache
+		getAndVerifyProduct(PRODUCT_ID_OK, OK);
+		verify(compositeIntegration, times(2)).getProduct(PRODUCT_ID_OK);
 	}
 
 	private WebTestClient.BodyContentSpec getAndVerifyProduct(int productId, HttpStatus expectedStatus) {
