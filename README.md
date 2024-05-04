@@ -25,16 +25,16 @@ the Product Composite service, which aggregates information from the three core 
 
 ### Built with
 
-* [![Spring][Spring.io]][https://spring.io/]
-* [![Redis][Redis.io]][https://redis.io/]
-* [![MongoDB][Mongodb.com]][https://www.mongodb.com/]
-* [![Postgresql][Postgresql.org]][https://www.postgresql.org/]
+* [![Spring][https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white]][https://spring.io/]
+* [![Redis][https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white]][https://redis.io/]
+* [![MongoDB][https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white]][https://www.mongodb.com/]
+* [![Postgresql][https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white]][https://www.postgresql.org/]
 
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-## Acknowledgements
+## Acknowledgments
 
 - [Microservices with Spring Boot 3 and Spring Cloud - Third Edition](https://www.packtpub.com/product/microservices-with-spring-boot-3-and-spring-cloud-third-edition-third-edition/9781805128694)
 - [Cache Abstraction](https://docs.spring.io/spring-framework/reference/integration/cache.html)
