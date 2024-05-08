@@ -17,14 +17,33 @@ unlocking its full potential for producing significant performance advantages.
 
 ## About the project
 
-To create this project, we will use a small set of cooperating microservices composed of three core microservices, 
-the product, review, and recommendation services, all of which deal with one type of resource, and a composite microservice, 
-called the product composite service, which aggregates information from the three core services. All of this information
-is stored in three different databases, one for each core microservice, and we will use the Spring Data project to persist
-data to MongoDB and PostgreSQL databases. Specifically, the product and recommendation microservices will use Spring Data
-for MongoDB and the review microservice will use Spring Data for the Java Persistence API (JPA) to access a PostgreSQL database.
+This project is developed using a small set of cooperating microservices, composed of three core services: product, review, 
+and recommendation. Each of them deals with one type of resource and interacts with a specific database. Additionally, 
+there is a composite microservice, called the product composite service, which aggregates information from these three core 
+services. All of this information is stored in three different databases, one for each core microservice, and the Spring Data 
+project is used to persist data to MongoDB and PostgreSQL databases. Specifically, the product and recommendation microservices
+use Spring Data for MongoDB and the review microservice uses Spring Data for the Java Persistence API(JPA) to access a 
+PostgreSQL database. In addition, the product composite service interacts with a Redis database used as a cache to store 
+the results of database retrieval operations, allowing subsequent requests to retrieve the data directly from the cache. 
+This significantly improves application performance by reducing unnecessary database calls.
+At the end of this project, we will have layers inside our microservices that will look like the following:
 
 ![](images/microservice-landscape.png)
+
+The Protocol layer handles protocol-specific logic. It is very thin, only consisting of the RestController annotations 
+in the api project and the common GlobalControllerExceptionHandler in the util project. The main functionality of each 
+microservice resides in each Service layer. The product composite service contains an Integration layer used to handle 
+the communication with the three core microservices. The core microservices will all have a Persistence layer used for 
+communicating with their databases. The cache annotations are integrated into the product composite Service layer, and 
+it will invoke the Integration layer only after querying the cache and in case the requested data is not found in the cache. 
+In particular when a request is made, the service initially looks in the Redis cache for the desired data. When a cache hit 
+occurs, the data is swiftly retrieved from the cache and promptly provided back to the service, avoiding the need to interact 
+with the database. However, if the requested data is not found in the cache (cache miss), the service falls back to the database 
+to retrieve the required information. Subsequently, the fetched data is stored in the Redis cache, enabling future requests 
+for the same data to be served directly from the cache, thereby eliminating further database queries and speeding up overall 
+response times.
+
+![](images/cache-mechanism.png)
 
 ### Built with
 
