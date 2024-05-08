@@ -5,6 +5,7 @@ unlocking its full potential for producing significant performance advantages.
 
 ## Table of contents
 
+- [Introduction to the Cache Abstraction](#Introduction-to-the-Cache-Abstraction)
 - [About the project](#about-the-project)
     * [Built with](#built-with)
 - [Getting started](#getting-started)
@@ -15,6 +16,33 @@ unlocking its full potential for producing significant performance advantages.
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
 
+## Introduction to the Cache Abstraction
+
+At its essence, the cache abstraction applies caching to Java methods, effectively reducing the number of executions 
+based on the cached information. That is, each time a designated method is invoked, the abstraction applies a caching 
+behavior that checks whether the method has been previously invoked for the given arguments. If it has been invoked, 
+the cached result is retrieved and returned without having to execute the method again. However, If the method hasn't been 
+invoked previously, then it is invoked, and the result is cached and returned to the user so that, the next time the method 
+is invoked, the cached result is returned. This way, expensive methods (whether CPU- or IO-bound) can be invoked only once 
+for a given set of parameters and the result reused without having to actually invoke the method again. The caching logic 
+is applied transparently without any interference to the invoker.
+
+One important aspect to consider is that this approach works only for methods that are guaranteed to return the same output
+(result) for a given input (or arguments) no matter how many times they are invoked. 
+
+The caching abstraction provides other cache-related operations, such as the ability to update the content of the cache 
+or to remove one or all entries. These are useful if the cache deals with data that can change during the course of the 
+application.
+
+As with other services in the Spring Framework, the caching service is an abstraction (not a cache implementation) and 
+requires the use of actual storage to store the cache data - that is, the abstraction frees you from having to write the 
+caching logic but does not provide the actual data store. This abstraction is materialized by the **`org.springframework.cache.Cache`**
+and **`org.springframework.cache.CacheManager`** interfaces.
+
+To use the cache abstraction, you need to take care of two aspects:
+ * Caching declaration: Identify the methods that need to be cached and their policies.
+ * Cache configuration: The backing cache where the data is stored and from which it is read.
+
 ## About the project
 
 This project is developed using a small set of cooperating microservices, composed of three core services: product, review, 
@@ -22,10 +50,10 @@ and recommendation. Each of them deals with one type of resource and interacts w
 there is a composite microservice, called the product composite service, which aggregates information from these three core 
 services. All of this information is stored in three different databases, one for each core microservice, and the Spring Data 
 project is used to persist data to MongoDB and PostgreSQL databases. Specifically, the product and recommendation microservices
-use Spring Data for MongoDB and the review microservice uses Spring Data for the Java Persistence API(JPA) to access a 
+use Spring Data for MongoDB and the review microservice uses Spring Data for the Java Persistence API (JPA) to access a 
 PostgreSQL database. In addition, the product composite service interacts with a Redis database used as a cache to store 
 the results of database retrieval operations, allowing subsequent requests to retrieve the data directly from the cache. 
-This significantly improves application performance by reducing unnecessary database calls.
+This significantly improves application performance by reducing unnecessary database calls.\
 At the end of this project, we will have layers inside our microservices that will look like the following:
 
 ![](images/microservice-landscape.png)
@@ -36,7 +64,7 @@ microservice resides in each Service layer. The product composite service contai
 the communication with the three core microservices. The core microservices will all have a Persistence layer used for 
 communicating with their databases. The cache annotations are integrated into the product composite Service layer, and 
 it will invoke the Integration layer only after querying the cache and in case the requested data is not found in the cache. 
-In particular when a request is made, the service initially looks in the Redis cache for the desired data. When a cache hit 
+In particular, when a request is made, the service initially looks in the Redis cache for the desired data. When a cache hit 
 occurs, the data is swiftly retrieved from the cache and promptly provided back to the service, avoiding the need to interact 
 with the database. However, if the requested data is not found in the cache (cache miss), the service falls back to the database 
 to retrieve the required information. Subsequently, the fetched data is stored in the Redis cache, enabling future requests 
@@ -44,6 +72,8 @@ for the same data to be served directly from the cache, thereby eliminating furt
 response times.
 
 ![](images/cache-mechanism.png)
+
+
 
 ### Built with
 
