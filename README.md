@@ -1,24 +1,21 @@
 # Spring Data Redis Cache
 
-With this project you'll take a deep dive into the world of caching and explore how to implement Redis cache in a Spring Boot 
+With this project you'll take a deep dive into the world of caching and explore how to implement Redis Cache in a Spring Boot 
 application, unlocking its full potential for producing significant performance advantages. 
 
 ## Table of contents
 
-- [Introduction to Cache Abstraction](#Introduction-to-Cache-Abstraction)
-- [Spring Boot Cache Providers](#Spring-Boot-Cache-Providers)
-- [What is Redis](#What-is-Redis)
-    * [Why use Redis as a cache in Spring](#Why-use-Redis-as-a-cache-in-Spring)
-    * [How does Redis Caching work](#How-does-Redis-Caching-work)
+- [Introduction to Cache Abstraction](#introduction-to-Cache-Abstraction)
+- [Spring Boot Cache Providers](#spring-Boot-Cache-Providers)
+- [What is Redis](#what-is-Redis)
+    * [Why use Redis as a Cache in Spring](#why-use-Redis-as-a-Cache-in-Spring)
+    * [How does Redis Caching work](#how-does-Redis-Caching-work)
 - [About the project](#about-the-project)
-    * [Built with](#built-with)
 - [Getting started](#getting-started)
-    * [Prerequisites](#prerequisites)
-    * [Installation](#installation)
-- [Usage](#usage)
-- [Roadmap](#roadmap)
+    * [Configuring Redis Cache in Spring Boot](#configuring-Redis-Cache-in-Spring-Boot)
+- [Built with](#built-with)
 - [License](#license)
-- [Acknowledgments](#acknowledgments)
+- [Resources](#resources)
 
 ## Introduction to Cache Abstraction
 
@@ -30,7 +27,7 @@ then it is called, and the result is cached and returned to the user. This way, 
 cached result is returned. With this approach, expensive methods (whether CPU- or IO-bound) can be invoked only the first time
 for a given set of parameters and the result reused without having to actually invoke the method again. 
 
-![](images/spring-boot-cache.png)
+![](images/cache-mechanism.png)
 
 The caching logic is applied transparently without any interference to the invoker. In fact, the method's invoker does not
 need to be aware of or explicitly handle caching mechanisms. Instead, the caching abstraction handles these operations behind
@@ -61,7 +58,7 @@ steps to configure any given cache provider:
  * Add the required cache library to the classpath.
  * Add the cache provider configuration file to the root classpath.
 
-In the following sections we will talk more about each of these steps and how to set up correctly a chosen cache provider.
+In the following sections we will talk more about each of these steps and how to set up a chosen cache provider correctly.
 The following are the cache provider supported by the Spring Boot framework:
  * JCache (JSR-107)
  * EhCache
@@ -75,7 +72,7 @@ The following are the cache provider supported by the Spring Boot framework:
 Redis is a NoSQL database, so it doesn't have any tables, rows, or columns, and it doesn't support SQL-like statements such 
 as select, insert, update, or delete. Instead, Redis uses various data structures to store data. As a result, it can serve 
 frequently requested items with incredibly fast response times and allow easy scaling for larger workloads without increasing 
-the cost of a more expensive back-end system. Hence, we advocate implementing caching in Spring Boot using Redis.
+the cost of a more expensive back-end system. Hence, we recommend implementing caching in Spring Boot application using Redis.
 
 ## What is Redis
 
@@ -97,10 +94,7 @@ queries.
 various system components. Redis supports messaging functionalities, serving as a message broker for facilitating communication
 between different system components.
 
-In this project, we will use Redis to perform cache management. Let’s move on to how to set up the cache mechanism with Redis
-on a Spring Boot application.
-
-### Why use Redis as a cache in Spring
+### Why use Redis as a Cache in Spring
 
 As mentioned above, the main reason to use caching is for performance. Redis Cache works as an in-memory cache, meaning that
 any data that is cached is stored on RAM. This offers significantly more data transfers per second. What this means is that 
@@ -120,17 +114,18 @@ return improves the overall performance of your system architecture.
 Redis Cache effectively stores the results of database retrieval operations, allowing subsequent requests to retrieve the 
 data directly from the cache. This significantly improves application performance by reducing unnecessary database calls.
 
-![](images/cache-mechanism.png)
+![](images/spring-boot-redis-cache.jpg)
 
 When a request is made, the service initially looks in the Redis cache for the desired data. When a cache hit occurs, the 
 data is swiftly retrieved from the cache and promptly provided back to the service, avoiding the need to interact with the 
 database.
 
-However, if the requested data is not found in the cache (cache miss), the service intelligently falls back to the database 
-to retrieve the required information. Subsequently, the fetched data is stored in the Redis cache, enabling future requests 
-for the same data to be served directly from the cache, thereby eliminating further database queries and speeding up overall 
-response times.
+However, if the requested data is not found in the cache (cache miss), the service falls back to the database to retrieve 
+the required information. Subsequently, the fetched data is stored in the Redis cache, enabling future requests for the same 
+data to be served directly from the cache, thereby eliminating further database queries and speeding up overall response times.
 
+In this project, we will use Redis to perform cache management. Let’s move on to how to set up the cache mechanism with Redis
+on a Spring Boot application.
 
 ## About the project
 
@@ -141,8 +136,8 @@ services. All of this information is stored in three different databases, one fo
 project is used to persist data to MongoDB and PostgreSQL databases. Specifically, the product and recommendation microservices
 use Spring Data for MongoDB and the review microservice uses Spring Data for the Java Persistence API (JPA) to access a 
 PostgreSQL database. In addition, the product composite service interacts with a Redis database used as a cache to store 
-the results of database retrieval operations, allowing subsequent requests to retrieve the data directly from the cache. 
-This significantly improves application performance by reducing unnecessary database calls.\
+the results of database retrieval operations, allowing subsequent requests to retrieve the data directly from the cache.
+
 At the end of this project, we will have layers inside our microservices that will look like the following:
 
 ![](images/microservice-landscape.png)
@@ -154,7 +149,144 @@ the communication with the three core microservices. The core microservices will
 communicating with their databases. The cache annotations are integrated into the product composite Service layer, and 
 it will invoke the Integration layer only after querying the cache and in case the requested data is not found in the cache.
 
-### Built with
+To keep the source code examples easy to understand, they have a minimal amount of business logic. The information model
+for the business objects they process is kept minimal for the same reason. In this section, we will go through the information
+that's handled by each microservice.
+
+The **product service** manages product information and describes each product with the following attributes:
+```
+• Product ID
+• Name
+• Weight
+```
+The **review service** manages product reviews and stores the following information about each review:
+```
+• Product ID
+• Review ID
+• Author
+• Subject
+• Content
+```
+
+The **recommendation service** manages product recommendations and stores the following information about each recommendation:
+```
+• Product ID
+• Recommendation ID
+• Author
+• Rate
+• Content
+```
+The **product composite service** aggregates information from the three core services and presents information about a product 
+as follows:
+```
+• Product information, as described in the product service
+• A list of product reviews for the specified product, as described in the review service 
+• A list of product recommendations for the specified product, as described in the recommendation service
+```
+
+In this tutorial we will skip the different steps to generate skeleton code for our project, and we will focus on how to 
+implement a caching system using Redis as a cache provider. But despite this, the full source code is available in the GitHub
+repository, so you can consult it anytime. 
+
+## Getting started
+
+### Configuring Redis Cache in Spring Boot
+
+To use Redis Cache in Spring Boot, you first need to set up all the configuration files by following these steps:
+
+* Add the spring-boot-started-cache and spring-boot-starter-data-redis dependencies to the product composite service 
+_pom.xml_ file.
+
+```
+	<dependencies>
+	...
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+	...
+	</dependencies>
+```
+
+* Add also the spring-boot-testcontainers and testcontainers-redis dependencies to the previous file, in order to test that 
+the cache logic works accordingly.
+
+```
+	<dependencies>
+	...
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.redis</groupId>
+			<artifactId>testcontainers-redis</artifactId>
+			<version>2.2.2</version>
+			<scope>test</scope>
+		</dependency>
+	...
+	</dependencies>
+```
+
+* Update the _docker-compose.yml_ file by adding a Redis service. This Redis server contains the database used for caching 
+and which Spring Boot project will automatically connect to. 
+
+```
+services:
+  ...
+  redis:
+    image: redis:latest
+    mem_limit: 512m
+    ports:
+      - "6379:6379"
+    healthcheck:
+        test: [ "CMD", "redis-cli", "ping" ]
+        interval: 5s
+        timeout: 2s
+        retries: 60
+```
+
+* Update the product composite _application.yml_ file to configure the Spring Boot application to automatically connect to 
+Redis.
+
+```
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    root: INFO
+    com.fpivetti: DEBUG
+    org.springframework.cache: TRACE
+    
+---
+spring.config.activate.on-profile: docker
+server.port: 8080
+spring.data.redis.host: redis
+```
+
+Important parts of the preceding code:
+
+ * We set the **type** parameter to **redis**, meaning that our application will automatically make the necessary 
+configurations to use Redis as the cache provider.
+ * When running without Docker using the default Spring profile, the Redis database is expected to be reachable on 
+**localhost:6379**
+ * Setting the log level for **org.springframework.cache** to **TRACE** will allow us to see which cache statements are 
+executed in the log
+ * When running inside Docker using the Spring profile, docker, the Redis database is expected to be reachable on 
+**redis:6379**
+
+## Built with
 
 * [![Spring][Spring.io]][Spring-url]
 * [![Redis][Redis.io]][Redis-url]
@@ -164,19 +296,11 @@ it will invoke the Integration layer only after querying the cache and in case t
 * [![Java][Java.com]][Java-url]
 * [![Java][Jetbrains.com]][Jetbrains-url]
 
-## Getting started
-### Prerequisites
-### Installation
-
-## Usage
-
-## Roadmap
-
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-## Acknowledgments
+## Resources
 
 - [Microservices with Spring Boot 3 and Spring Cloud - Third Edition](https://www.packtpub.com/product/microservices-with-spring-boot-3-and-spring-cloud-third-edition-third-edition/9781805128694)
 - [Cache Abstraction](https://docs.spring.io/spring-framework/reference/integration/cache.html)
