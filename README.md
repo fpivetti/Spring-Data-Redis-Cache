@@ -13,6 +13,8 @@ application, unlocking its full potential for producing significant performance 
 - [About the project](#about-the-project)
 - [Getting started](#getting-started)
     * [Configuring Redis Cache in Spring Boot](#configuring-Redis-Cache-in-Spring-Boot)
+    * [Adding Redis Configuration class](#adding-Redis-configuration-class)
+    * [Adding annotations to the cacheable methods](#adding-annotations-to-the-cacheable-methods)
 - [Built with](#built-with)
 - [License](#license)
 - [Resources](#resources)
@@ -167,7 +169,6 @@ The **review service** manages product reviews and stores the following informat
 • Subject
 • Content
 ```
-
 The **recommendation service** manages product recommendations and stores the following information about each recommendation:
 ```
 • Product ID
@@ -184,9 +185,9 @@ as follows:
 • A list of product recommendations for the specified product, as described in the recommendation service
 ```
 
-In this tutorial we will skip the different steps to generate skeleton code for our project, and we will focus on how to 
-implement a caching system using Redis as a cache provider. But despite this, the full source code is available in the GitHub
-repository, so you can consult it anytime. 
+In this tutorial we will skip the different steps to generate the skeleton code for our project, and we will focus our attention
+on how to implement a caching system using Redis as a cache provider. But despite this, the full source code is available 
+in the GitHub repository, so you can consult it anytime. 
 
 ## Getting started
 
@@ -196,7 +197,6 @@ To use Redis Cache in Spring Boot, you first need to set up all the configuratio
 
 * Add the spring-boot-started-cache and spring-boot-starter-data-redis dependencies to the product composite service 
 _pom.xml_ file.
-
 ```
 	<dependencies>
 	...
@@ -214,7 +214,6 @@ _pom.xml_ file.
 
 * Add also the spring-boot-testcontainers and testcontainers-redis dependencies to the previous file, in order to test that 
 the cache logic works accordingly.
-
 ```
 	<dependencies>
 	...
@@ -234,8 +233,7 @@ the cache logic works accordingly.
 ```
 
 * Update the _docker-compose.yml_ file by adding a Redis service. This Redis server contains the database used for caching 
-and which Spring Boot project will automatically connect to. 
-
+and which Spring Boot project will automatically connect to.
 ```
 services:
   ...
@@ -251,9 +249,8 @@ services:
         retries: 60
 ```
 
-* Update the product composite _application.yml_ file to configure the Spring Boot application to automatically connect to 
-Redis.
-
+* Update the product composite service _application.yml_ file to configure the Spring Boot application to automatically 
+connect to Redis.
 ```
 spring:
   cache:
@@ -280,11 +277,68 @@ Important parts of the preceding code:
  * We set the **type** parameter to **redis**, meaning that our application will automatically make the necessary 
 configurations to use Redis as the cache provider.
  * When running without Docker using the default Spring profile, the Redis database is expected to be reachable on 
-**localhost:6379**
+**localhost:6379**.
  * Setting the log level for **org.springframework.cache** to **TRACE** will allow us to see which cache statements are 
-executed in the log
+executed in the log.
  * When running inside Docker using the Spring profile, docker, the Redis database is expected to be reachable on 
-**redis:6379**
+**redis:6379**.
+
+### Adding Redis Configuration class
+
+To enable Spring Redis cache in the product composite microservice, we have to add some configuration. To do that we create 
+a class named _RedisCacheConfig.java_ under the config folder so that the necessary Redis settings can be detected by Spring 
+and seen as a Spring component.
+```
+@EnableCaching
+@Configuration
+public class RedisCacheConfig {
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(60))
+                .disableCachingNullValues()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(cacheConfiguration)
+                .transactionAware()
+                .build();
+    }
+}
+```
+
+Now let's examine the above class in detail:
+
+* `@EnableCaching`: This annotation is used to enable caching support in the Spring application. It will trigger a 
+post-processor that inspects every Spring Bean for the presence of caching annotations on public methods.
+* `@Configuration`: This annotation indicates that the class is a configuration class and its methods are defined as a 
+Spring Bean.
+* The configuration of Redis Cache created by RedisCacheManager is defined with `RedisCacheConfiguration`. This specifies the 
+default configuration for all caches, including default TTL, that is key expiration time, and serialization settings for 
+converting to and from the binary storage format. It also disables caching of null values.
+* RedisCacheManger behavior can be configured with `RedisCacheManagerBuilder`. It allows you to set the default RedisCacheConfiguration,
+which was defined earlier, and specify the transaction behavior.
+
+### Adding annotations to the cacheable methods
+
+You can use `@Cacheable` to demarcate methods that are cacheable - that is, methods for which the result is stored in the cache
+so that, on subsequent invocations (with the same arguments), the value in the cache is returned without having to actually
+invoke the method again.
+```
+@Cacheable(cacheNames = "products", key = "#productId")
+public ProductAggregateDto getProduct(int productId) {...}
+```
+
+The `cacheNames` attribute establishes a cache with a specific name, while the `key` attribute permits the use of Spring
+Expression Language to compute the key dynamically. Consequently, the method result is stored in the 'products' cache, where
+respective 'productId' serves as the unique key. This approach optimizes caching by associating each result with a distinct key.
+
+The cache abstraction allows not just population of a cache store but also eviction. This process is useful for removing
+stale or unused data from the cache. `@CacheEvict` annotation demarcates methods that perform cache eviction. 
+```
+@CacheEvict(cacheNames = "products", key = "#productId")
+public void deleteProduct(int productId) {...}
+```
 
 ## Built with
 
