@@ -9,12 +9,14 @@ application, unlocking its full potential for producing significant performance 
 - [Spring Boot Cache Providers](#spring-Boot-Cache-Providers)
 - [What is Redis](#what-is-Redis)
     * [Why use Redis as a Cache in Spring](#why-use-Redis-as-a-Cache-in-Spring)
-    * [How does Redis Caching work](#how-does-Redis-Caching-work)
+    * [How does Redis Caching works](#how-does-Redis-Caching-works)
 - [About the project](#about-the-project)
 - [Getting started](#getting-started)
     * [Configuring Redis Cache in Spring Boot](#configuring-Redis-Cache-in-Spring-Boot)
     * [Adding Redis Configuration class](#adding-Redis-configuration-class)
-    * [Adding annotations to the cacheable methods](#adding-annotations-to-the-cacheable-methods)
+    * [Adding annotations to cacheable methods](#adding-annotations-to-cacheable-methods)
+- [Testing Redis Cache with Testcontainers](#testing-redis-cache-with-testcontainers)
+- [Trying out Redis Cache](#trying-out-redis-cache)
 - [Built with](#built-with)
 - [License](#license)
 - [Resources](#resources)
@@ -61,7 +63,7 @@ steps to configure any given cache provider:
  * Add the cache provider configuration file to the root classpath.
 
 In the following sections we will talk more about each of these steps and how to set up a chosen cache provider correctly.
-The following are the cache provider supported by the Spring Boot framework:
+The following are the cache providers supported by the Spring Boot framework:
  * JCache (JSR-107)
  * EhCache
  * Hazelcast
@@ -111,7 +113,7 @@ frequent requests on the same URI.
 In a nutshell, Redis Cache minimizes the number of network calls made to your application and improves latency, which in 
 return improves the overall performance of your system architecture.
 
-### How does Redis Caching work
+### How does Redis Caching works
 
 Redis Cache effectively stores the results of database retrieval operations, allowing subsequent requests to retrieve the 
 data directly from the cache. This significantly improves application performance by reducing unnecessary database calls.
@@ -195,7 +197,7 @@ in the GitHub repository, so you can consult it anytime.
 
 To use Redis Cache in Spring Boot, you first need to set up all the configuration files by following these steps:
 
-* Add the spring-boot-started-cache and spring-boot-starter-data-redis dependencies to the product composite service 
+* Add the **spring-boot-started-cache** and **spring-boot-starter-data-redis** dependencies to the product composite service 
 _pom.xml_ file.
 ```
 	<dependencies>
@@ -212,7 +214,7 @@ _pom.xml_ file.
 	</dependencies>
 ```
 
-* Add also the spring-boot-testcontainers and testcontainers-redis dependencies to the previous file, in order to test that 
+* Add also the **spring-boot-testcontainers** and **testcontainers-redis** dependencies to the previous file, in order to test that 
 the cache logic works accordingly.
 ```
 	<dependencies>
@@ -274,19 +276,19 @@ spring.data.redis.host: redis
 
 Important parts of the preceding code:
 
- * We set the **type** parameter to **redis**, meaning that our application will automatically make the necessary 
+* We set the **type** parameter to **redis**, meaning that our application will automatically make the necessary 
 configurations to use Redis as the cache provider.
- * When running without Docker using the default Spring profile, the Redis database is expected to be reachable on 
+* When running without Docker using the default Spring profile, the Redis database is expected to be reachable on 
 **localhost:6379**.
- * Setting the log level for **org.springframework.cache** to **TRACE** will allow us to see which cache statements are 
+* Setting the log level for **org.springframework.cache** to **TRACE** will allow us to see which cache statements are 
 executed in the log.
- * When running inside Docker using the Spring profile, docker, the Redis database is expected to be reachable on 
+* When running inside Docker using the Spring profile, docker, the Redis database is expected to be reachable on 
 **redis:6379**.
 
 ### Adding Redis Configuration class
 
 To enable Spring Redis cache in the product composite microservice, we have to add some configuration. To do that we create 
-a class named _RedisCacheConfig.java_ under the config folder so that the necessary Redis settings can be detected by Spring 
+a class named _RedisCacheConfig_ under the config folder so that the necessary Redis settings can be detected by Spring 
 and seen as a Spring component.
 ```
 @EnableCaching
@@ -319,7 +321,7 @@ converting to and from the binary storage format. It also disables caching of nu
 * RedisCacheManger behavior can be configured with `RedisCacheManagerBuilder`. It allows you to set the default RedisCacheConfiguration,
 which was defined earlier, and specify the transaction behavior.
 
-### Adding annotations to the cacheable methods
+### Adding annotations to cacheable methods
 
 You can use `@Cacheable` to demarcate methods that are cacheable - that is, methods for which the result is stored in the cache
 so that, on subsequent invocations (with the same arguments), the value in the cache is returned without having to actually
@@ -334,11 +336,117 @@ Expression Language to compute the key dynamically. Consequently, the method res
 respective 'productId' serves as the unique key. This approach optimizes caching by associating each result with a distinct key.
 
 The cache abstraction allows not just population of a cache store but also eviction. This process is useful for removing
-stale or unused data from the cache. `@CacheEvict` annotation demarcates methods that perform cache eviction. 
+stale or unused data from the cache. `@CacheEvict` annotation demarcates methods that perform cache eviction, that is methods
+that act as triggers for removing data from the cache. As for `@Cacheable` annotation, we can use `cacheNames` and `key` 
+attributes to remove a specific data from the cache specified.
 ```
 @CacheEvict(cacheNames = "products", key = "#productId")
 public void deleteProduct(int productId) {...}
 ```
+
+## Testing Redis Cache with Testcontainers
+
+**Testcontainers** is a Java library that simplifies running automated integration tests by running resource managers like a
+database or a message broker as a Docker container. Testcontainers can be configured to automatically start up Docker containers
+when JUnit tests are started and tear down the containers when the tests are completed.
+
+To enable Testcontainers in an existing test class for a Spring Boot application, we can add the `@Testcontainers` annotation
+to the test class. A disadvantage of this approach is that each test class will use its own Docker container, each of them 
+taking time to bring up the database in the container. Running multiple test classes that use the same type of test container 
+will add this latency for each test class. To avoid this extra latency, we can use the **Single Container Pattern**. Following
+this pattern, a base class is used to launch a single Docker container for Redis. 
+
+The base class, _RedisCacheTestBase_, used in the Product composite microservice looks like this:
+```
+public abstract class RedisCacheTestBase {
+
+    @ServiceConnection
+    private static final RedisContainer cache = new RedisContainer("redis:latest");
+
+    @BeforeAll
+    static void beforeAll() {
+        cache.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        cache.stop();
+    }
+
+    @DynamicPropertySource
+    static void setProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.redis.host", cache::getHost);
+        registry.add("spring.data.redis.port", cache::getFirstMappedPort);
+    }
+}
+```
+
+Explanations for the preceding source code:
+* The cache container is declared as a RedisContainer and annotated with `@ServiceConnection` to indicate that this field
+provides a service that can be connected to.
+* A static method annotated with `@BeforeAll` is used to start the cache container before any JUnit code is invoked.
+* A static method annotated with `@AfterAll` is used to stop the cache container after any JUnit code is executed.
+* The cache container will get some properties defined when started up, such as which port to use. To register these
+dynamically created properties in the application context, a static method setProperties() is defined. The method is annotated
+with `@DynamicPropertySource` to override the cache configuration in the application context. 
+
+The test class, _ProductCompositeServiceApplicationTests_, use the base class as follows:
+```
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+class ProductCompositeServiceApplicationTests extends RedisCacheTestBase {...}
+```
+
+This test class declares a method, setUp(), annotated with `@BeforeEach`, which is executed before each test method. The setup
+method, among other things, removes any entities from previous tests in the cache. In this way, every time we start a new
+test, the cache is completely empty ensuring that each test case starts in a consistent state, reducing the likelihood 
+of unexpected interactions between tests due to shared cached data.
+```
+@Autowired
+private CacheManager cacheManager;
+
+@BeforeEach
+void setUp() {
+    ...
+    cacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(cacheManager.getCache(cacheName)).clear());
+}
+```
+
+To ensure that the cache works correctly, we define two test cases which test two different cache operations:
+* The first test verify that the second time we call the GET operation for the same productId, it will retrieve the result
+from the cache without invoking the getProduct method.
+```
+@Test
+void getProductByIdFromCache() {
+    getAndVerifyProduct(PRODUCT_ID_OK, OK);
+    getAndVerifyProduct(PRODUCT_ID_OK, OK);
+    verify(compositeIntegration, times(1)).getProduct(PRODUCT_ID_OK);
+}
+```
+
+* The second test verify that if we call the GET operation for a product after deleting it from the database, it will invoke
+the getProduct method since no entries are found in the cache.
+```
+@Test
+void deleteCompositeProductFromCache() {
+    getAndVerifyProduct(PRODUCT_ID_OK, OK);
+    deleteAndVerifyProduct(PRODUCT_ID_OK, OK);
+    getAndVerifyProduct(PRODUCT_ID_OK, OK);
+    verify(compositeIntegration, times(2)).getProduct(PRODUCT_ID_OK);
+}
+```
+
+## Trying out Redis Cache
+
+Once everything is set up, we can start the system landscape with the following commands:
+```
+$ ./mvnw clean package
+$ docker-compose build && docker-compose up
+```
+
+After running the application you can visit http://localhost:8080/openapi/webjars/swagger-ui/index.html to test and use 
+the different operations defined in the project.
+
+![](images/swagger-screenshot.png)
 
 ## Built with
 

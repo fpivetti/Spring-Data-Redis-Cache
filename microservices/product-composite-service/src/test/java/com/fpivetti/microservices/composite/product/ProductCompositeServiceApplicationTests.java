@@ -57,7 +57,7 @@ class ProductCompositeServiceApplicationTests extends RedisCacheTestBase {
 		when(compositeIntegration.getProduct(PRODUCT_ID_INVALID))
 				.thenThrow(new InvalidInputException("INVALID: " + PRODUCT_ID_INVALID));
 
-		// Before each test we clear the cache removing all saved entities
+		// Before each test we clean the cache removing all saved entities
 		cacheManager.getCacheNames().forEach(cacheName -> Objects.requireNonNull(cacheManager.getCache(cacheName)).clear());
 	}
 
