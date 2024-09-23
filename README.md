@@ -387,7 +387,7 @@ provides a service that can be connected to.
 * A static method annotated with `@BeforeAll` is used to start the cache container before any JUnit code is invoked.
 * A static method annotated with `@AfterAll` is used to stop the cache container after any JUnit code is executed.
 * The cache container will get some properties defined when started up, such as which port to use. To register these
-dynamically created properties in the application context, a static method setProperties() is defined. The method is annotated
+dynamically created properties in the application context, a static method _setProperties()_ is defined. The method is annotated
 with `@DynamicPropertySource` to override the cache configuration in the application context. 
 
 The test class, _ProductCompositeServiceApplicationTests_, use the base class as follows:
@@ -396,7 +396,7 @@ The test class, _ProductCompositeServiceApplicationTests_, use the base class as
 class ProductCompositeServiceApplicationTests extends RedisCacheTestBase {...}
 ```
 
-This test class declares a method, setUp(), annotated with `@BeforeEach`, which is executed before each test method. The setup
+This test class declares a method, _setUp()_, annotated with `@BeforeEach`, which is executed before each test method. The setup
 method, among other things, removes any entities from previous tests in the cache. In this way, every time we start a new
 test, the cache is completely empty ensuring that each test case starts in a consistent state, reducing the likelihood 
 of unexpected interactions between tests due to shared cached data.
